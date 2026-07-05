@@ -73,6 +73,31 @@ tasks:
     cmds:
       - slopstopper run reliability:seo -- {{.CLI_ARGS}}
 
+  reliability:llms-txt:
+    desc: Validate the llms.txt AI-discoverability map on a live URL
+    summary: |
+      Fetches /llms.txt and asserts it is a well-formed llms.txt map per
+      the llmstxt.org convention: an H1 title, an optional `> summary`
+      blockquote and one or more markdown links to key content. The
+      hard-fail bar is deliberately low (reachable, non-empty, has an H1,
+      has at least one link); spec niceties are advisory unless escalated
+      via config.
+
+      Configuration (environment variables; check_links / require_summary
+      are also read from .slopstopper.yml's `reliability.llms_txt`):
+        LLMS_TXT_TEST_URL  - base URL to audit (required)
+        LLMS_TXT_PATH      - path to the file (default: /llms.txt)
+
+      Flags:
+        --check-links      - HEAD-verify every link inside llms.txt
+        --require-summary  - fail if the `> summary` blockquote is missing
+
+      Usage:
+        task ss:reliability:llms-txt -- https://your-site.example.com
+        LLMS_TXT_TEST_URL=https://your-site.example.com task ss:reliability:llms-txt
+    cmds:
+      - slopstopper run reliability:llms-txt -- {{.CLI_ARGS}}
+
   reliability:accessibility:
     desc: Run accessibility audit against a live URL
     summary: |

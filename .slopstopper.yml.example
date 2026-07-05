@@ -99,6 +99,19 @@ smoke:
   # site-wide image).
   og_image_path: /og-image.png
 
+# ── llms.txt AI-discoverability check ────────────────────────────────
+# `reliability:llms-txt` audits /llms.txt (the llmstxt.org convention — a
+# curated markdown map that lets AI assistants read your key content
+# without parsing HTML). The hard-fail bar is deliberately low: reachable,
+# non-empty, has an H1, has at least one link. These knobs escalate the
+# advisory spec-niceties to hard failures.
+reliability:
+  llms_txt:
+    # HEAD-verify every link inside llms.txt resolves (non-4xx/5xx).
+    check_links: false
+    # Fail if the recommended `> summary` blockquote after the H1 is missing.
+    require_summary: false
+
 # ── Hygiene-check thresholds ─────────────────────────────────────────
 # Every hygiene check reads its own thresholds from here. Values shown
 # are the defaults used when a key is unset. Tune when a check fails for
