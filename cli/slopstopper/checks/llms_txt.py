@@ -157,6 +157,35 @@ def _check_links(links: list[str], base: str, notes: list[str], issues: list[str
     return results
 
 
+def _validate_body(
+    status: int,
+    ctype: str,
+    body: str,
+    require_summary: bool,
+) -> tuple[list[str], list[str], list[str]]:
+    """Return (issues, notes, links) for a fetched llms.txt body."""
+    issues: list[str] = []
+    notes: list[str] = []
+
+    if status != 200:
+        issues.append(f"HTTP status {status} (expected 200)")
+    if not any(ct in ctype.lower() for ct in MARKDOWN_CONTENT_TYPES):
+        notes.append(f"Content-Type is {ctype!r}, expected text/plain or text/markdown")
+    if not body.strip():
+        issues.append("llms.txt is empty")
+    if not _first_content_line(body).startswith("# "):
+        issues.append("Missing H1 title (first line should be `# <name>`)")
+
+    links = _extract_links(body)
+    if not links:
+        issues.append("No markdown links found — llms.txt should link to key content")
+    if not _has_summary(body):
+        msg = "Missing `> summary` blockquote after the H1 (recommended by the spec)"
+        (issues if require_summary else notes).append(msg)
+
+    return issues, notes, links
+
+
 def _audit(
     base: str,
     path: str,
@@ -164,8 +193,6 @@ def _audit(
     require_summary: bool,
 ) -> dict:
     file_url = urllib.parse.urljoin(base.rstrip("/") + "/", path.lstrip("/"))
-    issues: list[str] = []
-    notes: list[str] = []
 
     try:
         status, ctype, body = _fetch(file_url)
@@ -179,24 +206,7 @@ def _audit(
             "link_checks": [],
         }
 
-    if status != 200:
-        issues.append(f"HTTP status {status} (expected 200)")
-    if not any(ct in ctype.lower() for ct in MARKDOWN_CONTENT_TYPES):
-        notes.append(f"Content-Type is {ctype!r}, expected text/plain or text/markdown")
-
-    if not body.strip():
-        issues.append("llms.txt is empty")
-
-    if not _first_content_line(body).startswith("# "):
-        issues.append("Missing H1 title (first line should be `# <name>`)")
-
-    links = _extract_links(body)
-    if not links:
-        issues.append("No markdown links found — llms.txt should link to key content")
-
-    if not _has_summary(body):
-        msg = "Missing `> summary` blockquote after the H1 (recommended by the spec)"
-        (issues if require_summary else notes).append(msg)
+    issues, notes, links = _validate_body(status, ctype, body, require_summary)
 
     link_checks: list[dict] = []
     if links and check_links:
