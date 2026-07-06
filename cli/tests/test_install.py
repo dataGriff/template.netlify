@@ -384,3 +384,81 @@ def test_headers_append_is_idempotent(tmp_path):
     second_begin_count = second_content.count("# slopstopper security headers begin")
     assert second_begin_count == 1, f"expected exactly 1 begin marker after second install (idempotent append), got {second_begin_count}"
     assert second_content == first_content, "second install must not modify the headers file"
+
+
+# ── pre-push hygiene hook ────────────────────────────────────────
+
+
+def _hooks_path(target: Path) -> str | None:
+    """Return the target repo's local core.hooksPath, or None if unset."""
+    result = subprocess.run(
+        ["git", "config", "--local", "--get", "core.hooksPath"],
+        cwd=target,
+        capture_output=True,
+        text=True,
+    )
+    value = result.stdout.strip()
+    return value or None
+
+
+def test_installs_pre_push_hook_and_wires_hookspath(tmp_path):
+    """Fresh adopter with no existing hook setup — the hook file lands,
+    is executable, and core.hooksPath is wired to .githooks."""
+    target = _make_minimal_target(tmp_path)
+
+    result = _run_install(target)
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+    hook = target / ".githooks/pre-push"
+    assert hook.exists(), "pre-push hook file should be installed"
+    assert os.access(hook, os.X_OK), "pre-push hook must be executable"
+    assert "ss:hygiene:test" in hook.read_text(), "hook must run the hygiene aggregate"
+    assert _hooks_path(target) == ".githooks", "core.hooksPath should be wired to .githooks"
+
+
+def test_no_hooks_flag_skips_hook(tmp_path):
+    """--no-hooks writes neither the hook file nor the hooksPath config."""
+    target = _make_minimal_target(tmp_path)
+
+    result = _run_install(target, args=["--no-hooks"])
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+    assert not (target / ".githooks/pre-push").exists(), "--no-hooks must not write the hook"
+    assert _hooks_path(target) is None, "--no-hooks must not touch core.hooksPath"
+
+
+def test_no_hooks_env_var_skips_hook(tmp_path):
+    """SLOPSTOPPER_NO_HOOKS=1 is the env-var equivalent of --no-hooks."""
+    target = _make_minimal_target(tmp_path)
+
+    result = _run_install(target, env_extra={"SLOPSTOPPER_NO_HOOKS": "1"})
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+    assert not (target / ".githooks/pre-push").exists()
+    assert _hooks_path(target) is None
+
+
+def test_existing_hook_manager_preserves_hookspath(tmp_path):
+    """An adopter already running pre-commit gets the hook file dropped in,
+    but their core.hooksPath is left untouched (never hijack an existing setup)."""
+    target = _make_minimal_target(tmp_path)
+    (target / ".pre-commit-config.yaml").write_text("repos: []\n")
+
+    result = _run_install(target)
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+    assert (target / ".githooks/pre-push").exists(), "hook file should still be written for opt-in"
+    assert _hooks_path(target) is None, "existing hook manager: core.hooksPath must be left alone"
+
+
+def test_custom_hookspath_is_not_overridden(tmp_path):
+    """A repo that already points core.hooksPath elsewhere keeps its value."""
+    target = _make_minimal_target(tmp_path)
+    subprocess.run(
+        ["git", "config", "core.hooksPath", ".my-hooks"], cwd=target, check=True
+    )
+
+    result = _run_install(target)
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+    assert _hooks_path(target) == ".my-hooks", "custom hooksPath must be preserved"

@@ -21,7 +21,7 @@ The full suite into a repo (CLI + GitHub Actions workflows + Taskfile shim + con
 curl -fsSL https://raw.githubusercontent.com/hungovercoders/slopstopper/main/install.sh | bash
 ```
 
-`install.sh` is idempotent — re-run to refresh workflows. It **pins** `slopstopper-cli` in `mise.toml` and installs it via [mise](https://mise.jdx.dev), which activates it per-directory so the version follows the repo. No breaking release lands until you move it. See [Update](#update).
+`install.sh` is idempotent — re-run to refresh workflows. It **pins** `slopstopper-cli` in `mise.toml` and installs it via [mise](https://mise.jdx.dev), so a breaking release only lands when you move the pin. See [Update](#update).
 
 ## Contents
 
@@ -71,12 +71,13 @@ Everything SlopStopper owns lives under the `ss` namespace so it can't clash wit
 | `.github/workflows/ss-*.yml` | Security, hygiene, reliability and operational workflows — all `ss-` prefixed |
 | `Taskfile.ss.yml` | Thin `task ss:*` shims that call the CLI — convenient for the local dev loop |
 | `Taskfile.yml` | Created if missing (else: prints the include block to paste in) |
+| `.githooks/pre-push` | Runs `task ss:hygiene:test` pre-push (via `core.hooksPath`). Opt out with `--no-hooks`; skipped if you already run husky/lefthook/pre-commit |
 | `mise.toml` | Toolchain pin — `"pipx:slopstopper-cli"` + `task`; read locally + in CI (`jdx/mise-action`). Moves via `--upgrade-cli`/`--cli-version` |
 | `.slopstopper.yml` | Config seed — URLs, headers, thresholds, page lists (never overwritten) |
 | `.ss/reports/` | Where the CLI writes reports — `.gitignore`d |
 | `package.json` | Created (or `devDependencies` merged into an existing file) |
 
-Bundled Playwright specs, lighthouserc dev/prod, and the local-CI static server live inside the wheel — `slopstopper templates eject <name>` copies one into `.ss/` if you want to customise it.
+Bundled Playwright specs, lighthouserc dev/prod, and the local-CI static server live inside the wheel — `slopstopper templates eject <name>` copies one into `.ss/` to customise.
 
 ## What you get
 
@@ -102,7 +103,7 @@ Three portability layers. Layer 1 runs on install; layers 2–3 need a little co
 
 Don't use the doc-updater? Delete its workflows from `.github/workflows/` — re-running the installer respects deletions (tracked in `.ss/.workflows-installed`).
 
-Deploy is intentionally not a layer: connect your repo in the Cloudflare dash and you get production deploys, PR previews and preview cleanup for free. See [Deployment](./docs/deployment/README.md) for the cutover steps.
+Deploy is intentionally not a layer: connect your repo in the Cloudflare dash for production deploys, PR previews and preview cleanup. See [Deployment](./docs/deployment/README.md).
 
 ## Same commands, both loops
 
