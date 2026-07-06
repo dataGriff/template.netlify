@@ -34,6 +34,9 @@
 #   .github/workflows/ss-*      # all SlopStopper workflows are ss- prefixed
 #                               #   so they group together in the Actions UI
 #                               #   and cannot clash with your existing workflows
+#   .githooks/pre-push          # runs the fast hygiene checks before every push
+#                               #   (core.hooksPath → .githooks; skipped if you
+#                               #   already run husky/lefthook/pre-commit)
 #
 # Workflow set ships in three conceptual layers:
 #   1. Static analysis  — work on any code (SAST, Secrets, Trivy, complexity, doc checks)
@@ -68,6 +71,11 @@ if [ -n "${SLOPSTOPPER_NO_SKILLS:-}" ]; then
   INSTALL_SKILLS=false
 fi
 
+INSTALL_HOOKS=true
+if [ -n "${SLOPSTOPPER_NO_HOOKS:-}" ]; then
+  INSTALL_HOOKS=false
+fi
+
 # slopstopper-cli version control. The pinned version lives in the target's
 # mise.toml ([tools] "pipx:slopstopper-cli"). A plain run honours that pin;
 # these flags move it deliberately (both wrap `mise use`). CLI_VERSION_FLAG
@@ -84,6 +92,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-skills)
       INSTALL_SKILLS=false
+      shift
+      ;;
+    --no-hooks)
+      INSTALL_HOOKS=false
       shift
       ;;
     --upgrade-cli)
@@ -108,12 +120,14 @@ Usage:
   bash install.sh [TARGET_DIR]                 # Task-driven workflows (default)
   bash install.sh --no-task [TARGET_DIR]       # CLI-driven workflows (no Task install)
   bash install.sh --no-skills [TARGET_DIR]     # Skip installing Claude Code skills
+  bash install.sh --no-hooks [TARGET_DIR]      # Skip installing the pre-push hygiene hook
   bash install.sh --upgrade-cli [TARGET_DIR]   # Bump the pinned CLI to the latest on PyPI
   bash install.sh --cli-version X.Y.Z [TARGET] # Pin the CLI to an exact version
 
 Env var equivalents:
   SLOPSTOPPER_NO_TASK=1 bash install.sh
   SLOPSTOPPER_NO_SKILLS=1 bash install.sh
+  SLOPSTOPPER_NO_HOOKS=1 bash install.sh
 
 Default mode installs workflows that invoke `task ss:<check>` so the suite
 shares a single invocation surface with the rest of your codebase. `--no-task`
@@ -133,6 +147,13 @@ The installer also writes the SlopStopper Claude Code skills into
 repo benefits from them on git clone (Claude Code auto-discovers project-
 level skills). Pass --no-skills to skip this step. To refresh skills later
 without re-running the whole installer, use install-skill.sh.
+
+The installer also wires a pre-push git hook (.githooks/pre-push, via
+core.hooksPath) that runs the fast static hygiene checks (task ss:hygiene:test)
+before every push, so the first CI run confirms rather than discovers. It won't
+touch an existing hook manager (husky / lefthook / pre-commit) or a custom
+core.hooksPath — in that case it drops the hook file in and prints how to opt in.
+Pass --no-hooks to skip. Bypass a single push with 'git push --no-verify'.
 USAGE
       exit 0
       ;;
@@ -1005,6 +1026,73 @@ install_claude_skills() {
 
 install_claude_skills
 
+# ── install the pre-push hygiene hook ────────────────────────────────────────
+#
+# A pre-push hook that runs the fast static hygiene checks (`task
+# ss:hygiene:test`) before every push, so the first CI run confirms rather than
+# discovers. The hook script is slopstopper-owned and always refreshed (like
+# Taskfile.ss.yml); it lives in `.githooks/` (tracked, reviewable) and git is
+# pointed at it via `core.hooksPath`.
+#
+# Respectful wiring: we set core.hooksPath ONLY when it's safe — the adopter
+# hasn't already set a custom hooksPath and isn't running another hook manager
+# (husky / lefthook / pre-commit). Otherwise we still drop the hook file in but
+# leave their git config alone and print a one-line manual opt-in, so we never
+# hijack an existing setup. Disable the whole step with --no-hooks.
+
+# True if the target already manages git hooks some other way — a non-default
+# core.hooksPath, or a husky / lefthook / pre-commit config. We only auto-wire
+# core.hooksPath when none of these exist, mirroring target_has_node_pin's
+# "never clobber the adopter's setup" stance.
+target_has_hook_manager() {
+  local existing
+  existing="$(git -C "$TARGET_DIR" config --local --get core.hooksPath 2>/dev/null || true)"
+  [ -n "$existing" ] && [ "$existing" != ".githooks" ] && return 0
+  [ -d "$TARGET_DIR/.husky" ] && return 0
+  [ -f "$TARGET_DIR/lefthook.yml" ] && return 0
+  [ -f "$TARGET_DIR/.lefthook.yml" ] && return 0
+  [ -f "$TARGET_DIR/lefthook.yaml" ] && return 0
+  [ -f "$TARGET_DIR/.pre-commit-config.yaml" ] && return 0
+  return 1
+}
+
+install_git_hook() {
+  if [ "$INSTALL_HOOKS" = "false" ]; then
+    info "Skipping pre-push hook install (--no-hooks / SLOPSTOPPER_NO_HOOKS)."
+    return 0
+  fi
+
+  local src="$SCRIPT_DIR/.githooks/pre-push"
+  if [ ! -f "$src" ]; then
+    return 0  # running an old checkout without the hook — nothing to install
+  fi
+
+  # Not a git repo → nothing to hook into. Not fatal; the rest of the install
+  # is still useful.
+  if ! git -C "$TARGET_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    info "Target is not a git repository — skipping pre-push hook."
+    return 0
+  fi
+
+  mkdir -p "$TARGET_DIR/.githooks"
+  cp "$src" "$TARGET_DIR/.githooks/pre-push"
+  chmod +x "$TARGET_DIR/.githooks/pre-push"
+
+  if target_has_hook_manager; then
+    success "pre-push hook written to .githooks/pre-push (refreshed)"
+    warn "You already manage git hooks — leaving core.hooksPath alone."
+    info "To enable the slopstopper gate, either run:"
+    info "    git config core.hooksPath .githooks"
+    info "  or add 'task ss:hygiene:test' to your existing hook manager."
+  else
+    git -C "$TARGET_DIR" config core.hooksPath .githooks
+    success "pre-push hook installed (core.hooksPath → .githooks)"
+    info "Pushes now run 'task ss:hygiene:test' locally first. Bypass once with 'git push --no-verify'."
+  fi
+}
+
+install_git_hook
+
 # ── post-install guidance ─────────────────────────────────────────────────────
 
 sep
@@ -1041,6 +1129,12 @@ echo "       SAST · Secrets · Dependency CVEs · Dependency Review"
 echo "       Complexity · Doc Structure · Doc Accuracy · Doc Size"
 echo "       Auto-label PRs · Workflow-failure tracker"
 echo ""
+if [ "$INSTALL_HOOKS" = "true" ]; then
+  echo "  🪝 Local pre-push gate: the hygiene checks run before every push"
+  echo "       (task ss:hygiene:test) so CI confirms rather than discovers."
+  echo "       Bypass a single push with 'git push --no-verify'."
+  echo ""
+fi
 echo "  ⏳ Active once you point them at your app (edit .slopstopper.yml):"
 echo "       Smoke · Accessibility · Core Web Vitals · DAST · SEO · Broken Links"
 echo ""

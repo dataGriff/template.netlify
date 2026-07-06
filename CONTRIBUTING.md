@@ -31,6 +31,13 @@ task ss:hygiene:complexity               # Lizard cap
 task ss:security:sast                    # Semgrep
 ```
 
+The fast hygiene subset (`task ss:hygiene:test`) also runs automatically as a
+**pre-push hook** once you've run `task contributing:setup` (it points
+`core.hooksPath` at [`.githooks/`](./.githooks)). That gate catches the cheap,
+deterministic issues before they reach CI — the checks above still cover the
+server/browser layers the hook deliberately skips. Bypass a single push with
+`git push --no-verify`.
+
 ## Agents
 
 If you're an AI agent working on this repo, read

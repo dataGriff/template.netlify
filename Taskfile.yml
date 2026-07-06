@@ -20,9 +20,16 @@ tasks:
   # ───────────── Contributing — slopstopper's own dev loop ─────────────
 
   contributing:setup:
-    desc: Install project dependencies
+    desc: Install project dependencies and wire the pre-push hygiene hook
     cmds:
       - npm install
+      - task: contributing:hooks-install
+
+  contributing:hooks-install:
+    desc: Point git at .githooks so the pre-push hygiene gate runs locally
+    cmds:
+      - git config core.hooksPath .githooks
+      - echo "✅ core.hooksPath → .githooks (pre-push runs task ss:hygiene:test)"
 
   contributing:assets:
     desc: Re-render SVG source assets (og-image, apple-touch-icon) to PNG via Playwright

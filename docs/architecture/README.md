@@ -171,6 +171,17 @@ flowchart LR
     D -.->|iterate on feedback| A
 ```
 
+The push step is backed by an automated gate: `install.sh` wires a **pre-push
+hook** (`.githooks/pre-push`, via `core.hooksPath`) that runs the fast static
+hygiene checks — `task ss:hygiene:test` — before every push, so the first CI run
+confirms rather than discovers. It goes through `mise exec` (git hooks don't
+source your shell profile) and reuses the same `task ss:hygiene:test` target that
+CI runs, keeping one invocation surface across hook, local and CI. Only the
+static hygiene checks run in the hook; the server/browser checks (reliability,
+DAST) stay in the Outer Loop. The installer won't touch an existing hook manager
+(husky / lefthook / pre-commit) or a custom `core.hooksPath`; pass `--no-hooks`
+to skip it, and `git push --no-verify` bypasses a single push.
+
 ### Outer Loop — CI/CD
 
 The automated CI/CD pipeline triggered by every push or pull request. Each stage provides deterministic feedback before code reaches production.
