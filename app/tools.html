@@ -110,6 +110,21 @@ slopstopper serve                              # bundled static server</code></p
             </div>
 
             <div class="card">
+                <h2>🪝 Git hooks</h2>
+                <span class="tool-license">GPL-2.0</span>
+                <p><code>install.sh</code> wires a <strong>pre-push</strong> hook via <code>core.hooksPath</code> that runs the fast hygiene checks (<code>task ss:hygiene:test</code>) before every push — so the first CI run confirms rather than discovers. Only the static hygiene subset runs locally; the server/browser checks stay in CI. It won't override an existing <code>husky</code> / <code>lefthook</code> / <code>pre-commit</code> setup — re-run <code>install.sh --no-hooks</code> to skip it, or bypass a single push with <code>git push --no-verify</code>.</p>
+                <details class="details">
+                    <summary>.githooks/pre-push (installed)</summary>
+                    <div class="details__body">
+                        <div class="codeblock codeblock--sh"><pre><code># Runs through `mise exec` — git hooks don't source your shell profile.
+exec mise exec -- task ss:hygiene:test</code></pre></div>
+                        <p class="details__hint">Same command the hook, your local loop and CI all run — one invocation surface.</p>
+                        <a class="details__source" href="https://github.com/hungovercoders/slopstopper/blob/main/.githooks/pre-push" rel="noopener noreferrer">View .githooks/pre-push →</a>
+                    </div>
+                </details>
+            </div>
+
+            <div class="card">
                 <h2>🎭 Playwright</h2>
                 <span class="tool-license">Apache-2.0</span>
                 <p>Portable smoke, broken-link and accessibility specs ship inside the slopstopper-cli wheel — adopters don't vendor them. Run <code>slopstopper templates eject playwright.config.js</code> to customise.</p>
