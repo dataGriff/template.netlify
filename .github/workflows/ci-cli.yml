@@ -85,8 +85,10 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Install Task
-        run: curl -sL https://taskfile.dev/install.sh | sh -s -- -b /usr/local/bin
+      - name: Set up toolchain (task)
+        # Installs the mise-pinned `task` (mise.toml [tools]) — same
+        # version locally and in CI. Replaces a `curl | sh` bootstrap.
+        uses: jdx/mise-action@v2
       - name: Run CLI tests
         run: task -t cli/Taskfile.yml test
 
@@ -98,7 +100,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Install Task
-        run: curl -sL https://taskfile.dev/install.sh | sh -s -- -b /usr/local/bin
+      - name: Set up toolchain (task)
+        # Installs the mise-pinned `task` (mise.toml [tools]) — same
+        # version locally and in CI. Replaces a `curl | sh` bootstrap.
+        uses: jdx/mise-action@v2
       - name: Run parity diffs (bash vs CLI)
         run: task -t cli/Taskfile.yml parity

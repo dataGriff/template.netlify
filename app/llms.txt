@@ -1,0 +1,28 @@
+# SlopStopper
+
+> A portable suite of GitHub Actions workflows, Task targets and analysis
+> scripts that stops AI-generated "slop" reaching production — security,
+> hygiene, reliability, operational and deployment checks that humans, agents
+> and CI all invoke through one `task ss:*` surface.
+
+SlopStopper is two things at once: a portable quality suite you install into
+your own repo via `install.sh`, and a live reference site (this one) built and
+deployed with the same suite it advertises.
+
+## Site
+
+- [Home](https://slopstopper.dev/): what SlopStopper is and how to get started
+- [Features](https://slopstopper.dev/features.html): the five loops (security, hygiene, reliability, operational, deployment) and every check
+- [Tools](https://slopstopper.dev/tools.html): the underlying kit — Semgrep, OWASP ZAP, Trivy, Gitleaks, Playwright, axe-core, Lighthouse CI, GitHub Actions, Task
+- [Feedback](https://slopstopper.dev/feedback.html): report a bug or request a check
+
+## Source
+
+- [GitHub repository](https://github.com/hungovercoders/slopstopper): source, install.sh and the slopstopper CLI
+- [README](https://github.com/hungovercoders/slopstopper/blob/main/README.md): install and usage
+- [Documentation map](https://github.com/hungovercoders/slopstopper/blob/main/docs/index.md): the full docs index
+
+## For agents
+
+- [slopstopper-install skill](https://github.com/hungovercoders/slopstopper/blob/main/.claude/skills/slopstopper-install/SKILL.md): install SlopStopper into a repo or refresh an existing install
+- [slopstopper-triage skill](https://github.com/hungovercoders/slopstopper/blob/main/.claude/skills/slopstopper-triage/SKILL.md): diagnose and fix a failing SlopStopper check

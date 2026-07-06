@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains documentation for SlopStopper's reliability checks: portable smoke tests, broken-link audits, accessibility audits (see [ACCESSIBILITY.md](ACCESSIBILITY.md)) and Core Web Vitals via Lighthouse CI. These checks are wired against any reachable URL.
+This directory contains documentation for SlopStopper's reliability checks: portable smoke tests, broken-link audits, accessibility audits (see [ACCESSIBILITY.md](ACCESSIBILITY.md)), Core Web Vitals via Lighthouse CI, SEO/social-share metatags (see [SEO.md](SEO.md)) and the llms.txt AI-discoverability map (see [LLMS_TXT.md](LLMS_TXT.md)). These checks are wired against any reachable URL.
 
 ## Configuration (env vars)
 
@@ -24,6 +24,8 @@ All reliability checks read their target URL and audit scope from environment va
 | `SEO_PAGES` | `/` | SEO metatag check — comma-separated paths, e.g. `/,/features.html` |
 | `SEO_REQUIRE_OG_IMAGE` | `1` | SEO metatag check — set `0` to skip og:image presence check |
 | `SEO_VERIFY_OG_IMAGE` | `1` | SEO metatag check — set `0` to skip HEAD-fetching og:image |
+| `LLMS_TXT_TEST_URL` | (none) | llms.txt check — base URL to audit |
+| `LLMS_TXT_PATH` | `/llms.txt` | llms.txt check — path to the file |
 
 ## Broken Link Checks
 
