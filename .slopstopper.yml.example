@@ -112,6 +112,20 @@ reliability:
     # Fail if the recommended `> summary` blockquote after the H1 is missing.
     require_summary: false
 
+  # ── robots.txt discoverability + de-index guard check ──────────────
+  # `reliability:robots-txt` audits /robots.txt: reachable, non-empty, no
+  # blanket `Disallow: /` under `User-agent: *` (the de-index footgun), and
+  # at least one `Sitemap:` pointer. An `Llms:` pointer and the text/plain
+  # content-type are advisory. These knobs adjust that bar.
+  robots_txt:
+    # Permit a blanket `Disallow: /` without failing (e.g. a private
+    # staging site that genuinely wants to block all crawlers).
+    allow_disallow_all: false
+    # Fail if the `Llms:` pointer to /llms.txt is missing.
+    require_llms: false
+    # HEAD-verify the Sitemap:/Llms: URLs resolve (non-4xx/5xx).
+    check_links: false
+
 # ── Hygiene-check thresholds ─────────────────────────────────────────
 # Every hygiene check reads its own thresholds from here. Values shown
 # are the defaults used when a key is unset. Tune when a check fails for
