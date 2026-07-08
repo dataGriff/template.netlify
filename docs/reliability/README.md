@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains documentation for SlopStopper's reliability checks: portable smoke tests, broken-link audits, accessibility audits (see [ACCESSIBILITY.md](ACCESSIBILITY.md)), Core Web Vitals via Lighthouse CI, SEO/social-share metatags (see [SEO.md](SEO.md)) and the llms.txt AI-discoverability map (see [LLMS_TXT.md](LLMS_TXT.md)). These checks are wired against any reachable URL.
+This directory contains documentation for SlopStopper's reliability checks: portable smoke tests, broken-link audits, accessibility audits (see [ACCESSIBILITY.md](ACCESSIBILITY.md)), Core Web Vitals via Lighthouse CI, SEO/social-share metatags (see [SEO.md](SEO.md)), the llms.txt AI-discoverability map (see [LLMS_TXT.md](LLMS_TXT.md)) and the robots.txt discoverability + de-index guard (see [ROBOTS_TXT.md](ROBOTS_TXT.md)). These checks are wired against any reachable URL.
 
 ## Configuration (env vars)
 
@@ -26,6 +26,8 @@ All reliability checks read their target URL and audit scope from environment va
 | `SEO_VERIFY_OG_IMAGE` | `1` | SEO metatag check — set `0` to skip HEAD-fetching og:image |
 | `LLMS_TXT_TEST_URL` | (none) | llms.txt check — base URL to audit |
 | `LLMS_TXT_PATH` | `/llms.txt` | llms.txt check — path to the file |
+| `ROBOTS_TXT_TEST_URL` | (none) | robots.txt check — base URL to audit |
+| `ROBOTS_TXT_PATH` | `/robots.txt` | robots.txt check — path to the file |
 
 ## Broken Link Checks
 
