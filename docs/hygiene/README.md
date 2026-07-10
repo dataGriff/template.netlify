@@ -15,6 +15,16 @@ Analyzes code complexity using Lizard to identify overly complex functions and m
 task ss:hygiene:complexity
 ```
 
+The check **fails** when any function's cyclomatic complexity (CCN) exceeds `hygiene.complexity.max_ccn` (default `15` — Lizard's own warning line). The gate lives in the CLI, so `task ss:hygiene:complexity` returns the same pass/fail locally, in the pre-push hook, and in CI — there is no separate CI-only threshold. To run stricter, set the knob in `.slopstopper.yml`:
+
+```yaml
+hygiene:
+  complexity:
+    max_ccn: 10   # McCabe's classic "review" bound
+```
+
+When a function trips the ceiling and is genuinely well-factored (e.g. a flat dispatch or validation table), prefer raising `max_ccn` with a note over contorting the code — but treat that as a deliberate, documented decision, not a way to silence noise.
+
 ### Documentation Size Monitoring
 Monitors overall documentation size and checks against configured thresholds:
 
