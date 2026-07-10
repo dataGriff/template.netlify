@@ -1,6 +1,8 @@
 name: SlopStopper · Code Complexity Check
 
-# Detects high-complexity functions (CCN > 10) with Lizard.
+# Fails when a function exceeds hygiene.complexity.max_ccn (default 15,
+# Lizard-measured). The gate lives in the CLI, so `task ss:hygiene:complexity`
+# gives the identical result locally, in the pre-push hook and here.
 # Triggers: PR, push to main. Emits a rolling PR comment (updated
 # in-place per push) and a main-branch tracking issue on findings.
 # Docs: docs/hygiene/README.md.
@@ -51,23 +53,14 @@ jobs:
         run: pip install -e ./cli
 
       - name: Run complexity analysis
-        id: complexity
+        id: check
+        # The check owns the gate: `task ss:hygiene:complexity` exits non-zero
+        # when a function exceeds `hygiene.complexity.max_ccn` (default 15) —
+        # the same result you get locally and in the pre-push hook. We only
+        # continue-on-error so the report/comment/issue steps still run; the
+        # final step re-raises the failure.
+        continue-on-error: true
         run: task ss:hygiene:complexity
-
-      - name: Detect high-complexity items
-        id: gate
-        run: |
-          # CSV columns: nloc,ccn,token,param,length,location
-          if [ -f .ss/reports/complexity/complexity-report.csv ]; then
-            HIGH_COUNT=$(awk -F',' '$2 > 10' .ss/reports/complexity/complexity-report.csv | wc -l | tr -d ' ')
-          else
-            HIGH_COUNT=0
-          fi
-          echo "high_complexity_found=$([ "$HIGH_COUNT" -gt 0 ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
-          echo "high_count=$HIGH_COUNT" >> "$GITHUB_OUTPUT"
-          if [ "$HIGH_COUNT" -gt 0 ]; then
-            echo "⚠️  Found $HIGH_COUNT item(s) with CCN > 10"
-          fi
 
       - name: Upload complexity reports
         if: always()
@@ -87,19 +80,19 @@ jobs:
         run: slopstopper emit hygiene:complexity --target pr-comment
 
       - name: Emit issue on main (if high complexity)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.gate.outputs.high_complexity_found == '1'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outcome == 'failure'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: slopstopper emit hygiene:complexity --target issue
 
       - name: Close issue on main when clean
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.gate.outputs.high_complexity_found != '1'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: slopstopper emit hygiene:complexity --target issue --on-pass=close
 
       - name: Fail job if high complexity found
-        if: steps.gate.outputs.high_complexity_found == '1'
+        if: steps.check.outcome == 'failure'
         run: |
-          echo "::error::Code complexity issues detected (CCN > 10). Review the report and refactor."
+          echo "::error::Code complexity threshold exceeded. Review the report and refactor (or tune hygiene.complexity.max_ccn)."
           exit 1

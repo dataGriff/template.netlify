@@ -229,7 +229,11 @@ hygiene:
     max_files: 25            # default — total doc count
   entry_files:
     max_words: 1500          # default — README.md, CLAUDE.md, AGENTS.md, etc.
+  complexity:
+    max_ccn: 15              # default — CCN ceiling; a function above this fails
 ```
+
+`hygiene.complexity.max_ccn` gates locally, in the pre-push hook, and in CI off one exit code (there is no separate CI-only threshold) — so `task ss:hygiene:complexity` reproduces the CI result exactly. Drop it to `10` for McCabe-strict.
 
 Larger sites should also opt into `reliability.coverage.*` modes so accessibility/SEO/broken-links audit the whole sitemap on main and only changed pages on PRs — see [`.slopstopper.yml.example`](https://github.com/hungovercoders/slopstopper/blob/main/.slopstopper.yml.example) for the schema reference and resolution order.
 
@@ -398,6 +402,7 @@ Any keys present upstream but missing locally are new knobs you can opt into. Mo
 Surfaces worth checking explicitly:
 
 - **`hygiene.docs_size.*` / `hygiene.entry_files.*`** — per-check thresholds and rule toggles. Defaults are intentionally tight (150 KB / 25 files / 1500 words / map-pointer required). If a `docs-size`, `entry-files` budget, or `entry-files` pointer alert started firing post-refresh, the threshold knob (or `require_map_pointer: false` if the rule is wrong for this repo) is usually what's wanted — not deleting docs.
+- **`hygiene.complexity.max_ccn`** — CCN ceiling (default 15). As of this knob, the complexity gate lives in the CLI, so `task ss:hygiene:complexity` fails locally and in the pre-push hook exactly as it does in CI (previously it warned locally but only failed in CI). If a function newly blocks a push and is genuinely well-factored, raise the ceiling here rather than contorting the code.
 - **`reliability.coverage.{pr,main,cron}`** — page-discovery modes. Adopters with a sitemap should opt in to `sitemap` on main and `changed` on PRs; otherwise reliability checks only audit `/` by default.
 - **`reliability.coverage.cross_cutting_paths`** — escalation triggers for `changed` mode. If a PR-only audit skipped pages that should have been included, this is the lever.
 

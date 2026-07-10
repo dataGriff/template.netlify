@@ -155,6 +155,12 @@ hygiene:
     # Path to the docs map, relative to the repo root. Override if you
     # keep your map somewhere other than docs/index.md.
     map_path: docs/index.md
+  complexity:
+    # Cyclomatic complexity (CCN) ceiling. Any function above this fails
+    # the check — locally, in the pre-push hook, and in CI (one gate, one
+    # exit code). 15 is Lizard's own default warning line; drop to 10 for
+    # McCabe's classic "review" bound if you want to run stricter.
+    max_ccn: 15
 
 # ── Reliability coverage modes ───────────────────────────────────────
 # Opt-in alternative to the hand-list above. When set, accessibility,
