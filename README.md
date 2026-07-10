@@ -87,7 +87,7 @@ Five loops of feedback, all running on every PR and push to `main`:
 | ---- | ------------ | ----- | ---- |
 | 🔒 **Security** | SAST, DAST, secrets detection, dependency CVE scanning | Semgrep, OWASP ZAP, Gitleaks, Trivy | [Security →](./docs/security/README.md) |
 | 🧹 **Hygiene** | Cyclomatic complexity caps, doc structure/accuracy/size checks, auto-labelled PRs | Lizard, Bandit, markdownlint | [Hygiene →](./docs/hygiene/README.md) |
-| ✅ **Reliability** | E2E + smoke tests, broken-link audits, accessibility (WCAG 2.1 AA), Core Web Vitals, SEO metatags, llms.txt, robots.txt | Playwright, axe-core, Lighthouse CI, stdlib Python | [Reliability →](./docs/reliability/README.md) |
+| ✅ **Reliability** | E2E + smoke tests, broken-link audits, accessibility (WCAG 2.1 AA), Core Web Vitals, SEO metatags, llms.txt, robots.txt, sitemap.xml | Playwright, axe-core, Lighthouse CI, stdlib Python | [Reliability →](./docs/reliability/README.md) |
 | 🤖 **Runbooks** | Failed workflows auto-raise GitHub issues; an agentic doc updater opens weekly sync PRs | GitHub Actions, gh-aw | [Runbooks →](./docs/runbooks/README.md) |
 | 🚀 **Deployment** | Preview deploys per PR, automated production releases, automatic preview cleanup | Cloudflare Workers Builds (Git integration) | [Deployment →](./docs/deployment/README.md) |
 
@@ -97,8 +97,8 @@ Three portability layers. Layer 1 runs on install; layers 2–3 need a little co
 
 | Layer | Checks | What you provide |
 | ----- | ------ | ---------------- |
-| **1. Static analysis** (any code) | SAST, Secrets, Trivy, Dependency Review, Complexity, Doc Structure / Accuracy / Size, Auto-label PRs, Workflow-failure tracker | Nothing — works out of the box |
-| **2. Web-app dynamic** (need a URL) | Smoke, Broken Links, Accessibility, Core Web Vitals, SEO Metatags, llms.txt, robots.txt, DAST, Playwright | `SMOKE_TEST_URL` · `BROKEN_LINKS_TEST_URL` · `ACCESSIBILITY_TEST_URL` · `LIGHTHOUSE_URL` · `SEO_TEST_URL` · optionally `*_PAGES` env vars |
+| **1. Static analysis** (any code) | SAST, Secrets, Trivy, Dependency Review, Complexity, Doc Structure/Accuracy/Size, Auto-label PRs, Workflow-failure tracker | Nothing — works out of the box |
+| **2. Web-app dynamic** (need a URL) | Smoke, Broken Links, Accessibility, Core Web Vitals, SEO Metatags, llms.txt, robots.txt, sitemap.xml, DAST, Playwright | `SMOKE_TEST_URL` · `BROKEN_LINKS_TEST_URL` · `ACCESSIBILITY_TEST_URL` · `LIGHTHOUSE_URL` · `SEO_TEST_URL` · optionally `*_PAGES` env vars |
 | **3. Agentic doc-updater** | Weekly doc-sync PRs | `COPILOT_GITHUB_TOKEN` repo secret |
 
 Don't use the doc-updater? Delete its workflows from `.github/workflows/` — re-running the installer respects deletions (tracked in `.ss/.workflows-installed`).
@@ -200,6 +200,7 @@ This repo hosts both **slopstopper-cli** (the product, under [`cli/`](./cli)) an
 [![Broken Links](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-broken-links-check.yml/badge.svg?branch=main)](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-broken-links-check.yml)
 [![llms.txt](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-llms-txt-check.yml/badge.svg?branch=main)](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-llms-txt-check.yml)
 [![robots.txt](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-robots-txt-check.yml/badge.svg?branch=main)](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-robots-txt-check.yml)
+[![sitemap](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-sitemap-check.yml/badge.svg?branch=main)](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-reliability-sitemap-check.yml)
 
 #### 🤖 Operational
 [![Doc Auto-Updater](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-hygiene-doc-updater.lock.yml/badge.svg?branch=main)](https://github.com/hungovercoders/slopstopper/actions/workflows/ss-hygiene-doc-updater.lock.yml)

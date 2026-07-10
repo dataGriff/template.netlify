@@ -126,6 +126,26 @@ reliability:
     # HEAD-verify the Sitemap:/Llms: URLs resolve (non-4xx/5xx).
     check_links: false
 
+  # ── sitemap.xml completeness + drift check ─────────────────────────
+  # `reliability:sitemap` crawls the site from `/` and cross-checks the
+  # served sitemap.xml against the pages it actually reaches: a reachable
+  # page missing from the sitemap (hard-fail) or a `<loc>` that 404s
+  # (hard-fail) is drift. llms.txt page gaps are advisory. Flat `<urlset>`
+  # and nested `<sitemapindex>` shapes are both supported and never flagged.
+  sitemap:
+    # Crawl bound; hitting it is logged (never silent) and noted in the report.
+    max_pages: 200
+    # Globs excluded from both the crawl and the diff (e.g. /api/*, paginated routes).
+    ignore_paths: []
+    # Sitemap entries that nothing internally links to are advisory (set
+    # false to hard-fail on such orphans).
+    allow_orphans: true
+    # Escalate a reachable page missing from llms.txt to a hard failure.
+    require_llms_complete: false
+    # File locations (defaults shown).
+    sitemap_path: /sitemap.xml
+    llms_path: /llms.txt
+
 # ── Hygiene-check thresholds ─────────────────────────────────────────
 # Every hygiene check reads its own thresholds from here. Values shown
 # are the defaults used when a key is unset. Tune when a check fails for

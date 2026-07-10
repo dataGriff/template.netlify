@@ -501,11 +501,14 @@ task ss:reliability:cwv           -- http://localhost:8080
 task ss:reliability:seo           -- http://localhost:8080
 task ss:reliability:llms-txt      -- http://localhost:8080    # needs an app/llms.txt
 task ss:reliability:robots-txt    -- http://localhost:8080    # needs an app/robots.txt
+task ss:reliability:sitemap       -- http://localhost:8080    # crawls vs app/sitemap.xml
 task ss:reliability:broken-links         -- http://localhost:8080
 task ss:security:dast             -- http://localhost:8080    # needs Docker for OWASP ZAP
 ```
 
 `task ss:security:dast` is the heaviest local check (pulls and runs the OWASP ZAP container) — leave it for last in the loop. Skip it locally if Docker isn't installed and run it on CI only.
+
+**Durable pattern for discovery files (`llms.txt`, `sitemap.xml`, `robots.txt`):** if the adopter's stack can emit these at build time — a framework sitemap integration (e.g. `@astrojs/sitemap`, Next.js `app/sitemap.ts`) or a build-time endpoint that iterates their content (e.g. an Astro `src/pages/sitemap-*.xml.ts` / `src/pages/llms.txt.ts`) — steer them to **generate rather than hand-author** these files. A generated file is derived from the routes, so it can't drift out of sync, and `ss:reliability:sitemap` then verifies the generator is actually complete. Prefer generation; treat a static hand-written file as the fallback.
 
 Iterate the same way as Pass A: fix root cause locally, re-run the single task, move on once green.
 
