@@ -20,6 +20,7 @@ from slopstopper.checks import (
     sast,
     secrets,
     seo,
+    sitemap,
     smoke,
     vulnerability_all,
 )
@@ -37,6 +38,7 @@ REGISTRY: dict[str, Callable[[Optional[list[str]]], int]] = {
     "reliability:llms-txt": llms_txt.run,
     "reliability:robots-txt": robots_txt.run,
     "reliability:seo": seo.run,
+    "reliability:sitemap": sitemap.run,
     "reliability:smoke": smoke.run,
     "security:dast": dast.run,
     "security:sast": sast.run,

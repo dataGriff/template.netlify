@@ -408,6 +408,28 @@ on:
             </div>
 
             <div class="card">
+                <h2>🗺️ sitemap Check</h2>
+                <span class="tool-license">MIT</span>
+                <p>Crawls your site from <code>/</code> and cross-checks the served <code>sitemap.xml</code> against the pages it actually reaches. A reachable page missing from the sitemap, or a <code>&lt;loc&gt;</code> that 404s, hard-fails — that's drift. <code>llms.txt</code> gaps are advisory. Flat and nested (sitemap-index) shapes both pass. When it fails it recommends generating the file from your routes so it can't drift. Stdlib Python — no new dependencies.</p>
+                <a class="card-link" href="https://github.com/hungovercoders/slopstopper/blob/main/docs/reliability/SITEMAP.md" rel="noopener noreferrer">Learn more about sitemap check config →</a>
+                <details class="details">
+                    <summary>Taskfile excerpt</summary>
+                    <div class="details__body">
+                        <div class="codeblock codeblock--yaml"><pre><code>reliability:sitemap:
+  desc: Audit sitemap.xml completeness + drift by crawling a live URL
+  cmds:
+    - slopstopper run reliability:sitemap -- {{.CLI_ARGS}}
+  # Env: SITEMAP_TEST_URL, SITEMAP_PATH (default /sitemap.xml)
+  # Config: reliability.sitemap.{max_pages, ignore_paths, allow_orphans,
+  #         require_llms_complete, sitemap_path, llms_path}</code></pre></div>
+                        <a class="details__source" href="https://github.com/hungovercoders/slopstopper/blob/main/cli/slopstopper/checks/sitemap.py" rel="noopener noreferrer">View check script →</a>
+                        <br>
+                        <a class="details__source" href="https://github.com/hungovercoders/slopstopper/blob/main/.github/workflows/ss-reliability-sitemap-check.yml" rel="noopener noreferrer">View workflow →</a>
+                    </div>
+                </details>
+            </div>
+
+            <div class="card">
                 <h2>📝 markdownlint</h2>
                 <span class="tool-license">MIT</span>
                 <p>Lints all documentation as part of the hygiene checks, keeping markdown style, headings and link structure consistent across the repo.</p>

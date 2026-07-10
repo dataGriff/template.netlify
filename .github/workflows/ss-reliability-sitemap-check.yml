@@ -1,0 +1,152 @@
+name: SlopStopper · sitemap Check
+
+# Crawls the deployed site from `/` and cross-checks sitemap.xml against the
+# pages it actually reaches: a reachable page missing from the sitemap or a
+# `<loc>` that 404s hard-fails (drift); llms.txt page gaps are advisory. Both
+# flat and nested (sitemap-index) shapes are supported. Triggers: PR, push to
+# main, daily schedule, Cloudflare deployment events. Emits a rolling PR
+# comment; the workflow fails on drift (exit code is the signal, no separate
+# main-branch issue).
+# Docs: docs/reliability/SITEMAP.md.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  deployment_status:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to audit (leave blank to audit local build)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sitemap:
+    name: sitemap completeness audit
+    if: |
+      github.event_name != 'deployment_status' ||
+      github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Set up slopstopper toolchain
+        # Installs node + task (and, in adopter repos, the pinned
+        # slopstopper-cli) from mise.toml and puts them on PATH for later
+        # steps. The pins live in mise.toml ([tools]); mise resolves them
+        # per-repo, so CI and local runs share one version.
+        uses: jdx/mise-action@v2
+
+      - name: Install slopstopper-cli from source (slopstopper.dev only)
+        # In this repo the CLI runs from source (HEAD), so mise.toml carries
+        # no slopstopper-cli pin — install it editable here. Adopter repos
+        # skip this (no cli/ source) and use the mise-pinned wheel.
+        if: ${{ hashFiles('cli/pyproject.toml') != '' }}
+        run: pip install -e ./cli
+
+      - name: Determine audit URL
+        id: url
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_URL: ${{ github.event.inputs.url }}
+          DEPLOYMENT_URL: ${{ github.event.deployment_status.target_url }}
+        run: |
+          validate_url() {
+            local url="$1"
+            if [[ ! "$url" =~ ^https?://[^[:space:][:cntrl:]]+$ ]]; then
+              echo "Error: Invalid URL format: $url" >&2
+              exit 1
+            fi
+            printf '%s' "$url"
+          }
+
+          if [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$INPUT_URL" ]; then
+            SAFE_URL="$(validate_url "$INPUT_URL")"
+            echo "url=$SAFE_URL" >> "$GITHUB_OUTPUT"
+            echo "use_local=false" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" == "deployment_status" ]; then
+            SAFE_URL="$(validate_url "$DEPLOYMENT_URL")"
+            echo "url=$SAFE_URL" >> "$GITHUB_OUTPUT"
+            echo "use_local=false" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" == "schedule" ]; then
+            CONFIG_URL="$(slopstopper config get urls.production)"
+            if [ -z "$CONFIG_URL" ]; then
+              echo "::error::Scheduled run requires urls.production in .slopstopper.yml" >&2
+              exit 1
+            fi
+            SAFE_URL="$(validate_url "$CONFIG_URL")"
+            echo "url=$SAFE_URL" >> "$GITHUB_OUTPUT"
+            echo "use_local=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=http://localhost:8080" >> "$GITHUB_OUTPUT"
+            echo "use_local=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies (local build only)
+        if: steps.url.outputs.use_local == 'true'
+        run: npm ci
+
+      - name: Start local server (PR / push builds)
+        if: steps.url.outputs.use_local == 'true'
+        # CUSTOMISE FOR YOUR APP: by default this runs `npm run build`
+        # then `slopstopper serve` (the bundled static server). Point
+        # SITEMAP_TEST_URL at a deployed environment to skip the local
+        # serve, or eject the bundled server with
+        # `slopstopper templates eject server.js` and customise `.ss/server.js`.
+        run: |
+          if [ -f package.json ] && node -e "process.exit(require('./package.json').scripts?.build ? 0 : 1)"; then
+            npm run build
+          fi
+          slopstopper serve &
+          echo "SERVER_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 10); do
+            if curl -s http://localhost:8080 > /dev/null; then
+              echo "✅ Server ready"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run sitemap audit
+        id: audit
+        # The check rebases every sitemap/llms `<loc>` onto the audited origin,
+        # so it works uniformly against a localhost build or a deployed URL —
+        # it never HEADs the production domain from a local run.
+        run: task ss:reliability:sitemap -- ${{ steps.url.outputs.url }}
+
+      - name: Stop local server
+        if: steps.url.outputs.use_local == 'true' && always()
+        run: kill "$SERVER_PID" || true
+
+      - name: Upload sitemap report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sitemap-report-${{ github.run_id }}
+          path: .ss/reports/sitemap/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Emit PR comment
+        if: github.event_name == 'pull_request' && always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: slopstopper emit reliability:sitemap --target pr-comment
