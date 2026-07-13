@@ -2,7 +2,9 @@
 
 ## Overview
 
-This directory contains documentation for SlopStopper's reliability checks: portable smoke tests, broken-link audits, accessibility audits (see [ACCESSIBILITY.md](ACCESSIBILITY.md)), Core Web Vitals via Lighthouse CI, SEO/social-share metatags (see [SEO.md](SEO.md)), the llms.txt AI-discoverability map (see [LLMS_TXT.md](LLMS_TXT.md)), the robots.txt discoverability + de-index guard (see [ROBOTS_TXT.md](ROBOTS_TXT.md)) and the sitemap.xml completeness + drift check (see [SITEMAP.md](SITEMAP.md)). These checks are wired against any reachable URL.
+This directory contains documentation for SlopStopper's reliability checks: portable smoke tests, broken-link audits, accessibility audits (see [ACCESSIBILITY.md](ACCESSIBILITY.md)), Core Web Vitals via Lighthouse CI, SEO/social-share metatags (see [SEO.md](SEO.md)), the llms.txt AEO / AI-discoverability map (see [LLMS_TXT.md](LLMS_TXT.md)), the robots.txt discoverability + de-index guard (see [ROBOTS_TXT.md](ROBOTS_TXT.md)), and the sitemap.xml completeness + drift check (see [SITEMAP.md](SITEMAP.md)). These checks all run against any reachable URL.
+
+If by **AEO** (answer engine optimization) you mean "can answer engines and LLM crawlers discover and understand my site?", the relevant SlopStopper bundle is: [`ss:reliability:llms-txt`](LLMS_TXT.md) for the AI-readable content map, [`ss:reliability:robots-txt`](ROBOTS_TXT.md) for discoverability guards and pointers, [`ss:reliability:sitemap`](SITEMAP.md) for crawl completeness, and [`ss:reliability:seo`](SEO.md) for the human/search/social metadata that still feeds previews and indexers.
 
 ## Configuration (env vars)
 
