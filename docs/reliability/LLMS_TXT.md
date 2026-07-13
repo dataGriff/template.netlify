@@ -1,6 +1,6 @@
 # llms.txt AEO / AI-Discoverability Check
 
-`ss:reliability:llms-txt`, implemented in [`cli/slopstopper/checks/llms_txt.py`](../../cli/slopstopper/checks/llms_txt.py), audits your site's `/llms.txt` — the [llmstxt.org](https://llmstxt.org/) convention. `llms.txt` is a curated markdown map at the site root that lets AI assistants and agents read your key content directly, instead of parsing noisy HTML. In Siteimprove-style language, this is SlopStopper's core **AEO** (answer engine optimisation) check. It complements [`ss:reliability:seo`](SEO.md): SEO covers what human-facing crawlers read, this covers the surface an LLM reads.
+`ss:reliability:llms-txt`, implemented in [`cli/slopstopper/checks/llms_txt.py`](../../cli/slopstopper/checks/llms_txt.py), audits your site's `/llms.txt` — the [llmstxt.org](https://llmstxt.org/) convention. `llms.txt` is a curated markdown map at the site root that lets AI assistants and agents read your key content directly, instead of parsing noisy HTML. In AEO terms, this is SlopStopper's core **answer engine optimization** check. It complements [`ss:reliability:seo`](SEO.md): SEO covers what human-facing crawlers read, this covers the surface an LLM reads.
 
 The check is Python stdlib only — no new dependencies on top of Python 3.
 
