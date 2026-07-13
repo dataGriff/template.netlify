@@ -1,6 +1,6 @@
-# llms.txt AI-Discoverability Check
+# llms.txt AEO / AI-Discoverability Check
 
-`ss:reliability:llms-txt`, implemented in [`cli/slopstopper/checks/llms_txt.py`](../../cli/slopstopper/checks/llms_txt.py), audits your site's `/llms.txt` — the [llmstxt.org](https://llmstxt.org/) convention. `llms.txt` is a curated markdown map at the site root that lets AI assistants and agents read your key content directly, instead of parsing noisy HTML. It complements [`ss:reliability:seo`](SEO.md): SEO covers what human-facing crawlers read, this covers the surface an LLM reads.
+`ss:reliability:llms-txt`, implemented in [`cli/slopstopper/checks/llms_txt.py`](../../cli/slopstopper/checks/llms_txt.py), audits your site's `/llms.txt` — the [llmstxt.org](https://llmstxt.org/) convention. `llms.txt` is a curated markdown map at the site root that lets AI assistants and agents read your key content directly, instead of parsing noisy HTML. In Siteimprove-style language, this is SlopStopper's core **AEO** (answer engine optimisation) check. It complements [`ss:reliability:seo`](SEO.md): SEO covers what human-facing crawlers read, this covers the surface an LLM reads.
 
 The check is Python stdlib only — no new dependencies on top of Python 3.
 
@@ -71,7 +71,7 @@ See [`app/llms.txt`](../../app/llms.txt) for this site's own file — it's the c
 
 ## Why this exists
 
-A product whose value proposition is quality for the AI/agent era should be legible to agents. `llms.txt` gives an AI assistant evaluating your project a clean, curated entry point — you control what it surfaces and how it's described, rather than leaving it to scrape 60k of HTML. Adoption by major crawlers is still emerging, so the check verifies presence and structure cheaply rather than gating on a contested standard.
+A product whose value proposition is quality for the AI/agent era should be legible to agents. If you're asking "how do I check AEO?", this is the first SlopStopper check to turn on: `llms.txt` gives an AI assistant evaluating your project a clean, curated entry point — you control what it surfaces and how it's described, rather than leaving it to scrape 60k of HTML. Pair it with [`ss:reliability:robots-txt`](ROBOTS_TXT.md) and [`ss:reliability:sitemap`](SITEMAP.md) so answer engines can both discover the site and find the important pages. Adoption by major crawlers is still emerging, so the check verifies presence and structure cheaply rather than gating on a contested standard.
 
 ## CI integration
 

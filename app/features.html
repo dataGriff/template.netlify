@@ -272,7 +272,7 @@ exec mise exec -- task ss:hygiene:test</code></pre></div>
             <!-- ─── Reliability ─────────────────────────────────── -->
             <div class="card" id="reliability">
                 <h2>✅ Reliability</h2>
-                <p class="card-intro">Catch broken pages, dead internal links, slow loads, accessibility regressions and broken social-share previews before users do — E2E, smoke, broken-link, axe-core WCAG 2.1 AA, Lighthouse CI and SEO/OpenGraph checks on every change.</p>
+                <p class="card-intro">Catch broken pages, dead internal links, slow loads, accessibility regressions, broken social-share previews and AEO discoverability gaps before users do — E2E, smoke, broken-link, axe-core WCAG 2.1 AA, Lighthouse CI and SEO/OpenGraph checks on every change.</p>
                 <ul>
                     <li><strong>E2E Tests</strong> — Playwright covers navigation and critical user journeys</li>
                     <li><strong>Smoke Tests</strong> — Lightweight checks after every deploy</li>
@@ -280,7 +280,7 @@ exec mise exec -- task ss:hygiene:test</code></pre></div>
                     <li><strong>Accessibility</strong> — axe-core audits every page against WCAG 2.1 AA</li>
                     <li><strong>Core Web Vitals</strong> — Lighthouse CI measures LCP, INP and CLS</li>
                     <li><strong>SEO &amp; Social-Share</strong> — Lighthouse SEO budget + OpenGraph / Twitter Card / canonical presence check</li>
-                    <li><strong>llms.txt</strong> — Validates the <code>/llms.txt</code> AI-discoverability map (llmstxt.org): H1 title, summary and links to key content</li>
+                    <li><strong>llms.txt (AEO)</strong> — Validates the <code>/llms.txt</code> AI-discoverability map (llmstxt.org): H1 title, summary and links to key content</li>
                     <li><strong>robots.txt</strong> — Guards against an accidental blanket <code>Disallow: /</code> that de-indexes the whole site, and requires a <code>Sitemap:</code> pointer</li>
                     <li><strong>sitemap.xml</strong> — Crawls the site from <code>/</code> and cross-checks the sitemap: a reachable page missing from it or a <code>&lt;loc&gt;</code> that 404s fails; recommends generating the file from your routes</li>
                 </ul>
